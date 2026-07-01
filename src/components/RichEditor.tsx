@@ -87,7 +87,16 @@ export default function RichEditor({
           </ToolbarButton>
         </div>
       )}
-      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none print:p-0" />
+      <div className="relative">
+        <div
+          className="print:hidden pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage:
+              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(931px - 1px), #f87171 931px, transparent calc(931px + 1px))',
+          }}
+        />
+        <EditorContent editor={editor} className="relative p-4 min-h-[400px] focus:outline-none print:p-0" />
+      </div>
     </div>
   );
 }
