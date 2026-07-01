@@ -18,6 +18,7 @@ export const Variable = Node.create<VariableOptions>({
   inline: true,
   atom: true,
   selectable: true,
+  marks: '_',
 
   addOptions() {
     return { HTMLAttributes: {} };

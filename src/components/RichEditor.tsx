@@ -87,7 +87,7 @@ export default function RichEditor({
           </ToolbarButton>
         </div>
       )}
-      <EditorContent editor={editor} className="prose max-w-none p-4 min-h-[400px] focus:outline-none" />
+      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none" />
     </div>
   );
 }

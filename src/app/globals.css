@@ -32,6 +32,27 @@ body {
 
 .rich-editor .ProseMirror {
   outline: none;
+  font-family: Calibri, Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.15;
+}
+
+/* Reproduit les espacements par défaut de Word (styles.xml) pour que l'aperçu
+   corresponde à ce qui sera réellement téléchargé. */
+.rich-editor .ProseMirror p {
+  margin: 0 0 6pt 0;
+}
+
+.rich-editor .ProseMirror h2 {
+  margin: 18pt 0 4pt 0;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.rich-editor .ProseMirror ul,
+.rich-editor .ProseMirror ol {
+  margin: 0 0 6pt 0;
+  padding-left: 1.5em;
 }
 
 .rich-editor .ProseMirror p.is-editor-empty:first-child::before {
