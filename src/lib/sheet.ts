@@ -16,8 +16,35 @@ function computeCivilite(sexe: string | undefined): string {
   return first === 'F' ? 'Madame' : 'Monsieur';
 }
 
+const SCIENTIFIC_NOTATION = /^-?\d(\.\d+)?e[+-]\d+$/i;
+
+// Corrige les cellules numériques affichées en notation scientifique (ex. "2.99128E+14"
+// pour un numéro de sécurité sociale stocké comme nombre plutôt que texte dans le tableur) :
+// on reconstitue le nombre entier complet à partir de la valeur brute plutôt que
+// d'utiliser le texte formaté tronqué.
+function cellToText(cell: XLSX.CellObject | undefined): string {
+  if (!cell) return '';
+  const formatted = cell.w !== undefined ? String(cell.w) : '';
+  if (cell.t === 'n' && typeof cell.v === 'number' && SCIENTIFIC_NOTATION.test(formatted.trim())) {
+    if (Number.isSafeInteger(cell.v)) return String(cell.v);
+  }
+  return formatted;
+}
+
 function readSheetRows(sheet: XLSX.WorkSheet): string[][] {
-  return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
+  const ref = sheet['!ref'];
+  if (!ref) return [];
+  const range = XLSX.utils.decode_range(ref);
+  const rows: string[][] = [];
+  for (let r = range.s.r; r <= range.e.r; r++) {
+    const row: string[] = [];
+    for (let c = range.s.c; c <= range.e.c; c++) {
+      const cellRef = XLSX.utils.encode_cell({ r, c });
+      row.push(cellToText(sheet[cellRef]));
+    }
+    rows.push(row);
+  }
+  return rows;
 }
 
 function countNonEmpty(row: string[]): number {
