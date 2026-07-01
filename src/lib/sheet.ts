@@ -18,6 +18,22 @@ function computeCivilite(sexe: string | undefined): string {
 
 const SCIENTIFIC_NOTATION = /^-?\d(\.\d+)?e[+-]\d+$/i;
 
+// Reconnaît un montant affiché à l'anglo-saxonne (ex. "€39,000.00" ou "-€1,234.5")
+// et le reformate à la française : "39 000,00 €".
+const ANGLO_CURRENCY = /^(-?)€\s?([\d,]+(?:\.\d+)?)$/;
+
+function frenchifyCurrency(text: string): string {
+  const trimmed = text.trim();
+  const match = trimmed.match(ANGLO_CURRENCY);
+  if (!match) return text;
+
+  const [, sign, amount] = match;
+  const [intPart, decPart] = amount.replace(/,/g, '').split('.');
+  const withSpaces = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const decimals = decPart ? `,${decPart}` : '';
+  return `${sign}${withSpaces}${decimals} €`;
+}
+
 // Corrige les cellules numériques affichées en notation scientifique (ex. "2.99128E+14"
 // pour un numéro de sécurité sociale stocké comme nombre plutôt que texte dans le tableur) :
 // on reconstitue le nombre entier complet à partir de la valeur brute plutôt que
@@ -28,7 +44,7 @@ function cellToText(cell: XLSX.CellObject | undefined): string {
   if (cell.t === 'n' && typeof cell.v === 'number' && SCIENTIFIC_NOTATION.test(formatted.trim())) {
     if (Number.isSafeInteger(cell.v)) return String(cell.v);
   }
-  return formatted;
+  return frenchifyCurrency(formatted);
 }
 
 function readSheetRows(sheet: XLSX.WorkSheet): string[][] {
