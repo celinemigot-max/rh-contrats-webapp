@@ -10,6 +10,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const file = formData.get('file');
+  const sheetName = (formData.get('sheetName') as string) || undefined;
 
   if (!file || !(file instanceof Blob)) {
     return NextResponse.json({ error: 'Aucun fichier reçu.' }, { status: 400 });
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    const { employees, columns } = parseEmployeeSheet(buffer);
+    const { employees, columns } = parseEmployeeSheet(buffer, sheetName);
     if (employees.length === 0) {
       return NextResponse.json({ error: 'Aucune ligne de salarié trouvée dans ce fichier.' }, { status: 400 });
     }

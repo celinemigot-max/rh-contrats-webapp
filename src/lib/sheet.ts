@@ -18,26 +18,37 @@ function readSheetRows(sheet: XLSX.WorkSheet): string[][] {
   return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
 }
 
-// Choisit l'onglet le plus probable : celui dont la première ligne ressemble
-// le plus à une ligne d'en-têtes (le plus de cellules non vides).
-function pickBestSheet(workbook: XLSX.WorkBook): string[][] {
-  let best: string[][] = [];
-  let bestScore = -1;
-  for (const name of workbook.SheetNames) {
-    const rows = readSheetRows(workbook.Sheets[name]);
-    if (rows.length < 2) continue;
-    const headerCount = rows[0].filter(cell => cell.toString().trim() !== '').length;
-    if (headerCount > bestScore) {
-      bestScore = headerCount;
-      best = rows;
-    }
-  }
-  return best;
+function headerScore(rows: string[][]): number {
+  if (rows.length < 2) return -1;
+  return rows[0].filter(cell => cell.toString().trim() !== '').length;
 }
 
-export function parseEmployeeSheet(buffer: Buffer): { employees: Employee[]; columns: string[] } {
+export type SheetPreview = { name: string; headerCount: number; rowCount: number };
+
+// Liste les onglets du fichier avec un aperçu, pour laisser l'utilisateur choisir le bon.
+export function listSheetPreviews(buffer: Buffer): { previews: SheetPreview[]; suggested: string } {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
-  const rows = pickBestSheet(workbook);
+  const previews: SheetPreview[] = [];
+  let suggested = workbook.SheetNames[0] ?? '';
+  let bestScore = -1;
+
+  for (const name of workbook.SheetNames) {
+    const rows = readSheetRows(workbook.Sheets[name]);
+    const score = headerScore(rows);
+    previews.push({ name, headerCount: Math.max(score, 0), rowCount: Math.max(rows.length - 1, 0) });
+    if (score > bestScore) {
+      bestScore = score;
+      suggested = name;
+    }
+  }
+
+  return { previews, suggested };
+}
+
+export function parseEmployeeSheet(buffer: Buffer, sheetName?: string): { employees: Employee[]; columns: string[] } {
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  const name = sheetName && workbook.Sheets[sheetName] ? sheetName : listSheetPreviews(buffer).suggested;
+  const rows = name ? readSheetRows(workbook.Sheets[name]) : [];
 
   if (rows.length === 0) return { employees: [], columns: [] };
 
