@@ -153,17 +153,29 @@ export default function Parametres() {
               ? `${sheetOptions.length} onglets trouvés dans "${pendingFile.name}" — vérifie que le bon est sélectionné.`
               : `Onglet détecté dans "${pendingFile.name}".`}
           </p>
-          <select
-            value={chosenSheet}
-            onChange={e => setChosenSheet(e.target.value)}
-            className="w-full border rounded-md p-2 mb-3 bg-white text-sm"
-          >
+          <div className="flex flex-col gap-2 mb-3">
             {sheetOptions.map(s => (
-              <option key={s.name} value={s.name}>
-                {s.name} ({s.rowCount} lignes, {s.headerCount} colonnes)
-              </option>
+              <label
+                key={s.name}
+                className={`flex items-center justify-between gap-3 border rounded-md p-2.5 cursor-pointer text-sm ${
+                  chosenSheet === s.name ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="sheetChoice"
+                    checked={chosenSheet === s.name}
+                    onChange={() => setChosenSheet(s.name)}
+                  />
+                  {s.name}
+                </span>
+                <span className={s.headerCount === 0 ? 'text-red-600 font-medium' : 'text-gray-500'}>
+                  {s.rowCount} lignes, {s.headerCount} colonnes{s.headerCount === 0 ? ' ⚠️' : ''}
+                </span>
+              </label>
             ))}
-          </select>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={handleConfirm}

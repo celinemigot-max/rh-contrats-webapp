@@ -1,6 +1,8 @@
 import * as XLSX from 'xlsx';
 import type { Employee } from './storage';
 
+const MAX_HEADER_SCAN = 5;
+
 export function normalizeKey(header: string): string {
   return header
     .toString()
@@ -18,12 +20,27 @@ function readSheetRows(sheet: XLSX.WorkSheet): string[][] {
   return XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false });
 }
 
-function headerScore(rows: string[][]): number {
-  if (rows.length < 2) return -1;
-  return rows[0].filter(cell => cell.toString().trim() !== '').length;
+function countNonEmpty(row: string[]): number {
+  return row.filter(cell => cell.toString().trim() !== '').length;
 }
 
-export type SheetPreview = { name: string; headerCount: number; rowCount: number };
+// Cherche, parmi les premières lignes, celle qui ressemble le plus à une ligne
+// d'en-têtes (le plus de cellules non vides) — utile si une ligne de titre/bannière
+// précède les vrais en-têtes.
+function findHeaderRowIndex(rows: string[][]): number {
+  let bestIndex = 0;
+  let bestScore = -1;
+  for (let i = 0; i < Math.min(rows.length, MAX_HEADER_SCAN); i++) {
+    const score = countNonEmpty(rows[i]);
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+  return bestIndex;
+}
+
+export type SheetPreview = { name: string; headerCount: number; rowCount: number; headerRowIndex: number };
 
 // Liste les onglets du fichier avec un aperçu, pour laisser l'utilisateur choisir le bon.
 export function listSheetPreviews(buffer: Buffer): { previews: SheetPreview[]; suggested: string } {
@@ -34,8 +51,14 @@ export function listSheetPreviews(buffer: Buffer): { previews: SheetPreview[]; s
 
   for (const name of workbook.SheetNames) {
     const rows = readSheetRows(workbook.Sheets[name]);
-    const score = headerScore(rows);
-    previews.push({ name, headerCount: Math.max(score, 0), rowCount: Math.max(rows.length - 1, 0) });
+    const headerRowIndex = findHeaderRowIndex(rows);
+    const score = rows.length > headerRowIndex + 1 ? countNonEmpty(rows[headerRowIndex]) : -1;
+    previews.push({
+      name,
+      headerCount: Math.max(score, 0),
+      rowCount: Math.max(rows.length - headerRowIndex - 1, 0),
+      headerRowIndex,
+    });
     if (score > bestScore) {
       bestScore = score;
       suggested = name;
@@ -47,8 +70,11 @@ export function listSheetPreviews(buffer: Buffer): { previews: SheetPreview[]; s
 
 export function parseEmployeeSheet(buffer: Buffer, sheetName?: string): { employees: Employee[]; columns: string[] } {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
-  const name = sheetName && workbook.Sheets[sheetName] ? sheetName : listSheetPreviews(buffer).suggested;
-  const rows = name ? readSheetRows(workbook.Sheets[name]) : [];
+  const { previews, suggested } = listSheetPreviews(buffer);
+  const name = sheetName && workbook.Sheets[sheetName] ? sheetName : suggested;
+  const preview = previews.find(p => p.name === name);
+  const allRows = name ? readSheetRows(workbook.Sheets[name]) : [];
+  const rows = preview ? allRows.slice(preview.headerRowIndex) : allRows;
 
   if (rows.length === 0) return { employees: [], columns: [] };
 
