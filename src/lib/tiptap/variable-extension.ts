@@ -7,7 +7,7 @@ export interface VariableOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     variable: {
-      insertVariable: (attrs: { tag: string; label: string }) => ReturnType;
+      insertVariable: (attrs: { tag: string; label: string; bold?: boolean }) => ReturnType;
     };
   }
 }
@@ -28,6 +28,7 @@ export const Variable = Node.create<VariableOptions>({
     return {
       tag: { default: '' },
       label: { default: '' },
+      bold: { default: false },
     };
   },
 
@@ -36,7 +37,7 @@ export const Variable = Node.create<VariableOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    return [
+    const span: [string, Record<string, unknown>, string] = [
       'span',
       mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
         'data-variable': node.attrs.tag,
@@ -44,6 +45,7 @@ export const Variable = Node.create<VariableOptions>({
       }),
       node.attrs.label,
     ];
+    return node.attrs.bold ? ['strong', {}, span] : span;
   },
 
   renderText({ node }) {
@@ -56,7 +58,7 @@ export const Variable = Node.create<VariableOptions>({
         attrs =>
         ({ chain }) =>
           chain()
-            .insertContent({ type: this.name, attrs })
+            .insertContent({ type: this.name, attrs: { bold: false, ...attrs } })
             .run(),
     };
   },
