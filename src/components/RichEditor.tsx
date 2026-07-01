@@ -11,6 +11,7 @@ import TableCell from '@tiptap/extension-table-cell';
 import { useEffect } from 'react';
 import { Variable } from '@/lib/tiptap/variable-extension';
 import { Indent } from '@/lib/tiptap/indent-extension';
+import { PreservePasteFormatting } from '@/lib/tiptap/preserve-paste-extension';
 
 export type VariableDef = { tag: string; label: string };
 
@@ -30,6 +31,7 @@ export default function RichEditor({
       StarterKit,
       Variable,
       Indent,
+      PreservePasteFormatting,
       TextAlign.configure({ types: ['paragraph', 'heading'] }),
       Table.configure({ resizable: true }),
       TableRow,
