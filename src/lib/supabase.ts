@@ -18,5 +18,3 @@ export const supabase = new Proxy({} as SupabaseClient, {
     return (getSupabase() as unknown as Record<string | symbol, unknown>)[prop];
   },
 });
-
-export const TEMPLATES_BUCKET = 'templates';

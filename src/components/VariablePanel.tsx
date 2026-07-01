@@ -1,0 +1,39 @@
+'use client';
+
+import { useState } from 'react';
+import type { Editor } from '@tiptap/react';
+import type { VariableDef } from './RichEditor';
+
+export default function VariablePanel({ variables, editor }: { variables: VariableDef[]; editor: Editor | null }) {
+  const [query, setQuery] = useState('');
+  const filtered = variables.filter(v => v.label.toLowerCase().includes(query.toLowerCase()));
+
+  return (
+    <div className="w-64 shrink-0 border rounded-lg bg-white p-3 h-fit sticky top-6">
+      <p className="text-sm font-medium mb-2">Variables</p>
+      <p className="text-xs text-gray-500 mb-3">
+        Place ton curseur dans le texte, puis clique sur une variable pour l&apos;insérer.
+      </p>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Rechercher une variable"
+        className="w-full text-sm border rounded-md px-2 py-1.5 mb-2"
+      />
+      <div className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto">
+        {filtered.map(v => (
+          <button
+            key={v.tag}
+            type="button"
+            disabled={!editor}
+            onClick={() => editor?.chain().focus().insertVariable({ tag: v.tag, label: v.label }).run()}
+            className="text-left text-sm px-2.5 py-1.5 rounded-md border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
+          >
+            {v.label}
+          </button>
+        ))}
+        {filtered.length === 0 && <p className="text-sm text-gray-400">Aucune variable trouvée.</p>}
+      </div>
+    </div>
+  );
+}
