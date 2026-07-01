@@ -47,9 +47,9 @@ export default function RichEditor({
   }, [editor, onReady]);
 
   return (
-    <div className="rich-editor border rounded-lg bg-white">
+    <div className="rich-editor border rounded-lg bg-white print:border-0 print:rounded-none">
       {editor && (
-        <div className="sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
+        <div className="print:hidden sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
           <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
             Gras
           </ToolbarButton>
@@ -87,7 +87,7 @@ export default function RichEditor({
           </ToolbarButton>
         </div>
       )}
-      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none" />
+      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none print:p-0" />
     </div>
   );
 }

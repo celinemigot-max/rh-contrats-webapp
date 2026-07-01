@@ -47,6 +47,10 @@ export default function ContractPage() {
 
   const handleReady = useCallback((e: Editor) => setEditor(e), []);
 
+  function handlePrintPdf() {
+    window.print();
+  }
+
   async function handleDownload() {
     setDownloading(true);
     setSuccess('');
@@ -78,26 +82,34 @@ export default function ContractPage() {
 
   return (
     <div className="mx-auto max-w-3xl w-full p-6 sm:p-10">
-      <div className="flex items-center justify-between mb-6">
+      <div className="print:hidden flex items-center justify-between mb-6">
         <Link href="/" className="text-sm text-blue-600 hover:underline">← Retour</Link>
         {!error && (
-          <button
-            onClick={handleDownload}
-            disabled={downloading}
-            className="bg-blue-600 text-white text-sm font-medium rounded-md px-4 py-2 hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            {downloading ? 'Génération…' : 'Télécharger le contrat (.docx)'}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePrintPdf}
+              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50"
+            >
+              Télécharger en PDF
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={downloading}
+              className="bg-blue-600 text-white text-sm font-medium rounded-md px-4 py-2 hover:bg-blue-700 disabled:bg-gray-400"
+            >
+              {downloading ? 'Génération…' : 'Télécharger le contrat (.docx)'}
+            </button>
+          </div>
         )}
       </div>
 
-      {templateName && <p className="text-sm text-gray-500 mb-4">Modèle : {templateName}</p>}
-      {error && <p className="text-sm text-red-600 mb-4">{error}</p>}
-      {success && <p className="text-sm text-green-700 mb-4">{success}</p>}
+      {templateName && <p className="print:hidden text-sm text-gray-500 mb-4">Modèle : {templateName}</p>}
+      {error && <p className="print:hidden text-sm text-red-600 mb-4">{error}</p>}
+      {success && <p className="print:hidden text-sm text-green-700 mb-4">{success}</p>}
 
       {!error && (
         <>
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="print:hidden text-sm text-gray-500 mb-3">
             Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte ci-dessous avant de télécharger.
           </p>
           <RichEditor initialContent={initialContent} onReady={handleReady} />
