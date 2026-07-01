@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { addTemplate, loadTemplatesMeta } from '@/lib/storage';
 
 export async function GET() {
-  return NextResponse.json({ templates: loadTemplatesMeta() });
+  return NextResponse.json({ templates: await loadTemplatesMeta() });
 }
 
 export async function POST(request: NextRequest) {
@@ -20,6 +20,12 @@ export async function POST(request: NextRequest) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const meta = addTemplate(name, fileName, buffer);
-  return NextResponse.json({ template: meta });
+
+  try {
+    const meta = await addTemplate(name, fileName, buffer);
+    return NextResponse.json({ template: meta });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Erreur inconnue.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

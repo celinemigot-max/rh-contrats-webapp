@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Salarié et modèle requis.' }, { status: 400 });
   }
 
-  const { employees } = loadEmployees();
+  const { employees } = await loadEmployees();
   const employee = employees.find(e => e._id === String(employeeId));
   if (!employee) {
     return NextResponse.json({ error: 'Salarié introuvable.' }, { status: 404 });
@@ -17,9 +17,10 @@ export async function POST(request: NextRequest) {
 
   let templateBuffer, meta;
   try {
-    ({ buffer: templateBuffer, meta } = getTemplateBuffer(templateId));
-  } catch {
-    return NextResponse.json({ error: 'Modèle introuvable.' }, { status: 404 });
+    ({ buffer: templateBuffer, meta } = await getTemplateBuffer(templateId));
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Modèle introuvable.';
+    return NextResponse.json({ error: message }, { status: 404 });
   }
 
   try {
