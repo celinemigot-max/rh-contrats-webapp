@@ -7,12 +7,26 @@ function escapeHtml(value: string): string {
     .replace(/>/g, '&gt;');
 }
 
-const VARIABLE_SPAN = /<span[^>]*data-variable="([^"]+)"[^>]*>.*?<\/span>/g;
+const VARIABLE_SPAN = /<span[^>]*data-variable="([^"]+)"[^>]*>(.*?)<\/span>/g;
+
+function todayFormatted(): string {
+  const today = new Date();
+  return [
+    String(today.getDate()).padStart(2, '0'),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    today.getFullYear(),
+  ].join('/');
+}
 
 export function mergeTemplateHtml(content: string, employee: Employee): string {
-  return content.replace(VARIABLE_SPAN, (match, tag) => {
-    const value = employee[tag];
-    return value !== undefined && value !== '' ? escapeHtml(value) : '';
+  const withComputed: Employee = { ...employee, DateDuJour: employee.DateDuJour || todayFormatted() };
+
+  return content.replace(VARIABLE_SPAN, (match, tag, label) => {
+    const value = withComputed[tag];
+    if (value === undefined) {
+      return `<span style="color:#b91c1c;background:#fef2f2;border-radius:4px;padding:1px 6px;">⚠ variable inconnue : ${label}</span>`;
+    }
+    return value === '' ? '' : escapeHtml(value);
   });
 }
 
