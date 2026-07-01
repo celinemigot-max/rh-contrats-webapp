@@ -49,7 +49,7 @@ export default function RichEditor({
   return (
     <div className="rich-editor border rounded-lg bg-white">
       {editor && (
-        <div className="flex gap-1 border-b p-2 flex-wrap">
+        <div className="sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
           <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
             Gras
           </ToolbarButton>

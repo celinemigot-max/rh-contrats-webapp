@@ -56,7 +56,6 @@ export const Variable = Node.create<VariableOptions>({
         ({ chain }) =>
           chain()
             .insertContent({ type: this.name, attrs })
-            .insertContent(' ')
             .run(),
     };
   },
