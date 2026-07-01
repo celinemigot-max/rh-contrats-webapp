@@ -10,9 +10,12 @@ export default function VariablePanel({ variables, editor }: { variables: Variab
 
   return (
     <div className="w-64 shrink-0 border rounded-lg bg-white p-3 h-fit sticky top-6">
-      <p className="text-sm font-medium mb-2">Variables</p>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-sm font-medium">Variables</p>
+        <span className="text-xs text-gray-400">{variables.length}</span>
+      </div>
       <p className="text-xs text-gray-500 mb-3">
-        Place ton curseur dans le texte, puis clique sur une variable pour l&apos;insérer.
+        Place ton curseur dans le texte, puis clique sur une variable pour l&apos;insérer. Fais défiler pour voir toutes les variables.
       </p>
       <input
         value={query}
@@ -20,19 +23,24 @@ export default function VariablePanel({ variables, editor }: { variables: Variab
         placeholder="Rechercher une variable"
         className="w-full text-sm border rounded-md px-2 py-1.5 mb-2"
       />
-      <div className="flex flex-col gap-1.5 max-h-[60vh] overflow-y-auto">
-        {filtered.map(v => (
-          <button
-            key={v.tag}
-            type="button"
-            disabled={!editor}
-            onClick={() => editor?.chain().focus().insertVariable({ tag: v.tag, label: v.label }).run()}
-            className="text-left text-sm px-2.5 py-1.5 rounded-md border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
-          >
-            {v.label}
-          </button>
-        ))}
-        {filtered.length === 0 && <p className="text-sm text-gray-400">Aucune variable trouvée.</p>}
+      <div className="relative">
+        <div className="flex flex-col gap-1.5 max-h-[70vh] overflow-y-auto pr-1">
+          {filtered.map(v => (
+            <button
+              key={v.tag}
+              type="button"
+              disabled={!editor}
+              onClick={() => editor?.chain().focus().insertVariable({ tag: v.tag, label: v.label }).run()}
+              className="text-left text-sm px-2.5 py-1.5 rounded-md border border-blue-100 bg-blue-50 text-blue-700 hover:bg-blue-100 transition disabled:opacity-50"
+            >
+              {v.label}
+            </button>
+          ))}
+          {filtered.length === 0 && <p className="text-sm text-gray-400">Aucune variable trouvée.</p>}
+        </div>
+        {filtered.length > 8 && (
+          <div className="pointer-events-none absolute bottom-0 left-0 right-1 h-6 bg-gradient-to-t from-white to-transparent" />
+        )}
       </div>
     </div>
   );
