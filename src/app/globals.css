@@ -41,3 +41,22 @@ body {
   pointer-events: none;
   height: 0;
 }
+
+.rich-editor .ProseMirror table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.rich-editor .ProseMirror table td,
+.rich-editor .ProseMirror table th {
+  border: 1px solid #d1d5db;
+  padding: 6px 10px;
+  vertical-align: top;
+  position: relative;
+}
+
+.rich-editor .ProseMirror table th {
+  background: #f3f4f6;
+  font-weight: 600;
+}

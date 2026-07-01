@@ -3,9 +3,14 @@
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { useEffect } from 'react';
 import { Variable } from '@/lib/tiptap/variable-extension';
+import { Indent } from '@/lib/tiptap/indent-extension';
 
 export type VariableDef = { tag: string; label: string };
 
@@ -21,7 +26,17 @@ export default function RichEditor({
   placeholder?: string;
 }) {
   const editor = useEditor({
-    extensions: [StarterKit, Variable, Underline, Placeholder.configure({ placeholder })],
+    extensions: [
+      StarterKit,
+      Variable,
+      Indent,
+      TextAlign.configure({ types: ['paragraph', 'heading'] }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Placeholder.configure({ placeholder }),
+    ],
     content: initialContent,
     editable,
     immediatelyRender: false,
@@ -52,6 +67,23 @@ export default function RichEditor({
           </ToolbarButton>
           <ToolbarButton active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}>
             Liste
+          </ToolbarButton>
+          <span className="w-px bg-gray-200 mx-1" />
+          <ToolbarButton active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}>
+            Gauche
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}>
+            Centré
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive({ textAlign: 'justify' })} onClick={() => editor.chain().focus().setTextAlign('justify').run()}>
+            Justifié
+          </ToolbarButton>
+          <ToolbarButton active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}>
+            Droite
+          </ToolbarButton>
+          <span className="w-px bg-gray-200 mx-1" />
+          <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run()}>
+            Tableau
           </ToolbarButton>
         </div>
       )}
