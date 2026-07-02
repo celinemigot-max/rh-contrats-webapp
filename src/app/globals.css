@@ -32,7 +32,6 @@ body {
 
 .rich-editor .ProseMirror {
   outline: none;
-  font-family: Calibri, Arial, sans-serif;
   font-size: 11pt;
   line-height: 1.15;
 }

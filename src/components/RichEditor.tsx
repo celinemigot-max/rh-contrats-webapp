@@ -1,5 +1,6 @@
 'use client';
 
+import { Carlito } from 'next/font/google';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -14,6 +15,11 @@ import { Indent } from '@/lib/tiptap/indent-extension';
 import { PreservePasteFormatting } from '@/lib/tiptap/preserve-paste-extension';
 
 export type VariableDef = { tag: string; label: string };
+
+// Police intégrée à l'application (pas dépendante des polices installées sur l'ordinateur) :
+// garantit un retour à la ligne identique pour tout le monde, y compris entre l'aperçu à
+// l'écran et l'impression PDF. Carlito est métriquement compatible avec Calibri.
+const carlito = Carlito({ subsets: ['latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
 
 export default function RichEditor({
   initialContent,
@@ -49,7 +55,7 @@ export default function RichEditor({
   }, [editor, onReady]);
 
   return (
-    <div className="rich-editor w-[688px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto">
+    <div className={`rich-editor ${carlito.className} w-[688px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto`}>
       {editor && (
         <div className="print:hidden sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
           <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
