@@ -95,7 +95,20 @@ export default function RichEditor({
           </ToolbarButton>
         </div>
       )}
-      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none print:p-0" />
+      <div className="relative">
+        <div
+          className="print:hidden pointer-events-none absolute inset-0"
+          style={{
+            // Repère approximatif de fin de page A4. Calibré par mesure directe contre un
+            // PDF réel : fiable pour la page 1, mais peut légèrement dériver au-delà (la
+            // largeur de fenêtre et les enchaînements de paragraphes influencent le retour
+            // à la ligne). À utiliser comme guide visuel rapide, pas comme vérité absolue.
+            backgroundImage:
+              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(945px - 1px), #f87171 945px, transparent calc(945px + 1px))',
+          }}
+        />
+        <EditorContent editor={editor} className="relative p-4 min-h-[400px] focus:outline-none print:p-0" />
+      </div>
     </div>
   );
 }

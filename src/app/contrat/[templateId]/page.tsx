@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Editor } from '@tiptap/react';
@@ -18,12 +18,8 @@ export default function ContractPage() {
   const [loading, setLoading] = useState(true);
   const [downloadingWord, setDownloadingWord] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [refreshingPreview, setRefreshingPreview] = useState(false);
-  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
-  const [showPreview, setShowPreview] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!employeeId) {
@@ -79,52 +75,14 @@ export default function ContractPage() {
     }
   }
 
-  const refreshPreview = useCallback(async () => {
-    if (!editor) return;
-    setRefreshingPreview(true);
-    setError('');
-    const html = editor.getHTML();
-    try {
-      const res = await fetch('/api/export-pdf', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ html, fileName }),
-      });
-      if (!res.ok) throw new Error((await res.json()).error);
-      const blob = await res.blob();
-      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      previewUrlRef.current = url;
-      setPdfPreviewUrl(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue.');
-    } finally {
-      setRefreshingPreview(false);
-    }
-  }, [editor, fileName]);
-
-  // Génère automatiquement l'aperçu dès que le contrat est prêt.
-  useEffect(() => {
-    if (editor && showPreview && !pdfPreviewUrl) {
-      refreshPreview();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor, showPreview]);
-
   if (loading) return <div className="p-10 text-center text-gray-400">Génération en cours…</div>;
 
   return (
-    <div className={`mx-auto w-full p-6 sm:p-10 ${showPreview ? 'max-w-7xl' : 'max-w-3xl'}`}>
-      <div className="print:hidden flex items-center justify-between mb-6 flex-wrap gap-2">
+    <div className="mx-auto max-w-3xl w-full p-6 sm:p-10">
+      <div className="print:hidden flex items-center justify-between mb-6">
         <Link href="/" className="text-sm text-blue-600 hover:underline">← Retour</Link>
         {!error && (
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setShowPreview(v => !v)}
-              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50"
-            >
-              {showPreview ? 'Masquer l’aperçu PDF' : 'Afficher l’aperçu PDF'}
-            </button>
+          <div className="flex gap-2">
             <button
               onClick={() => downloadFile('/api/export-pdf', 'pdf', setDownloadingPdf)}
               disabled={downloadingPdf}
@@ -150,35 +108,10 @@ export default function ContractPage() {
       {!error && (
         <>
           <p className="print:hidden text-sm text-gray-500 mb-3">
-            Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte à gauche —
-            l&apos;aperçu à droite montre le vrai PDF, clique sur « Actualiser l&apos;aperçu » après tes modifications.
+            Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte ci-dessous avant de télécharger.
+            Les lignes rouges indiquent approximativement les fins de page.
           </p>
-          <div className={showPreview ? 'flex flex-col lg:flex-row gap-6 items-start' : ''}>
-            <div className={showPreview ? 'w-full lg:flex-1 min-w-0' : ''}>
-              <RichEditor initialContent={initialContent} onReady={handleReady} />
-            </div>
-            {showPreview && (
-              <div className="print:hidden w-full lg:w-[45%] shrink-0 lg:sticky lg:top-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium">Aperçu PDF (pagination exacte)</p>
-                  <button
-                    onClick={refreshPreview}
-                    disabled={refreshingPreview}
-                    className="text-sm bg-blue-600 text-white rounded-md px-3 py-1.5 hover:bg-blue-700 disabled:bg-gray-400"
-                  >
-                    {refreshingPreview ? 'Actualisation…' : 'Actualiser l’aperçu'}
-                  </button>
-                </div>
-                {pdfPreviewUrl ? (
-                  <iframe src={pdfPreviewUrl} className="w-full h-[80vh] border rounded-lg" title="Aperçu PDF" />
-                ) : (
-                  <div className="w-full h-[80vh] border rounded-lg flex items-center justify-center text-sm text-gray-400">
-                    Génération de l&apos;aperçu…
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          <RichEditor initialContent={initialContent} onReady={handleReady} />
         </>
       )}
     </div>
