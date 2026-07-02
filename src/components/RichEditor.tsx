@@ -55,7 +55,7 @@ export default function RichEditor({
   }, [editor, onReady]);
 
   return (
-    <div className={`rich-editor ${carlito.className} w-[688px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto`}>
+    <div className={`rich-editor ${carlito.className} w-[718px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto`}>
       {editor && (
         <div className="print:hidden sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
           <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
@@ -95,20 +95,7 @@ export default function RichEditor({
           </ToolbarButton>
         </div>
       )}
-      <div className="relative">
-        <div
-          className="print:hidden pointer-events-none absolute inset-0"
-          style={{
-            // Calibré en mesurant précisément, dans une fenêtre large, la position du
-            // texte à l'endroit exact où un PDF réel change de page. Remarque : la
-            // largeur de la fenêtre du navigateur influence le retour à la ligne, donc
-            // ce repère est le plus fiable avec une fenêtre large (idéalement maximisée).
-            backgroundImage:
-              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(945px - 1px), #f87171 945px, transparent calc(945px + 1px))',
-          }}
-        />
-        <EditorContent editor={editor} className="relative p-4 min-h-[400px] focus:outline-none print:p-0" />
-      </div>
+      <EditorContent editor={editor} className="p-4 min-h-[400px] focus:outline-none print:p-0" />
     </div>
   );
 }

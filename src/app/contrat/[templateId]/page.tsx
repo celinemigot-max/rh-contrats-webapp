@@ -16,7 +16,10 @@ export default function ContractPage() {
   const [templateName, setTemplateName] = useState('');
   const [editor, setEditor] = useState<Editor | null>(null);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
+  const [downloadingWord, setDownloadingWord] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [previewingPdf, setPreviewingPdf] = useState(false);
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -47,17 +50,13 @@ export default function ContractPage() {
 
   const handleReady = useCallback((e: Editor) => setEditor(e), []);
 
-  function handlePrintPdf() {
-    window.print();
-  }
-
-  async function handleDownload() {
-    setDownloading(true);
+  async function downloadFile(endpoint: string, extension: string, setBusy: (b: boolean) => void) {
+    setBusy(true);
     setSuccess('');
     setError('');
     const html = editor?.getHTML() ?? '';
     try {
-      const res = await fetch('/api/export', {
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ html, fileName }),
@@ -67,15 +66,40 @@ export default function ContractPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${fileName}.docx`;
+      a.download = `${fileName}.${extension}`;
       a.click();
       URL.revokeObjectURL(url);
       setSuccess('Contrat téléchargé.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue.');
     } finally {
-      setDownloading(false);
+      setBusy(false);
     }
+  }
+
+  async function openPdfPreview() {
+    setPreviewingPdf(true);
+    setError('');
+    const html = editor?.getHTML() ?? '';
+    try {
+      const res = await fetch('/api/export-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ html, fileName }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const blob = await res.blob();
+      setPdfPreviewUrl(URL.createObjectURL(blob));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue.');
+    } finally {
+      setPreviewingPdf(false);
+    }
+  }
+
+  function closePdfPreview() {
+    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
+    setPdfPreviewUrl(null);
   }
 
   if (loading) return <div className="p-10 text-center text-gray-400">Génération en cours…</div>;
@@ -87,17 +111,25 @@ export default function ContractPage() {
         {!error && (
           <div className="flex gap-2">
             <button
-              onClick={handlePrintPdf}
-              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50"
+              onClick={openPdfPreview}
+              disabled={previewingPdf}
+              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
             >
-              Télécharger en PDF
+              {previewingPdf ? 'Génération…' : 'Aperçu PDF (pagination exacte)'}
             </button>
             <button
-              onClick={handleDownload}
-              disabled={downloading}
+              onClick={() => downloadFile('/api/export-pdf', 'pdf', setDownloadingPdf)}
+              disabled={downloadingPdf}
+              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {downloadingPdf ? 'Génération…' : 'Télécharger en PDF'}
+            </button>
+            <button
+              onClick={() => downloadFile('/api/export', 'docx', setDownloadingWord)}
+              disabled={downloadingWord}
               className="bg-blue-600 text-white text-sm font-medium rounded-md px-4 py-2 hover:bg-blue-700 disabled:bg-gray-400"
             >
-              {downloading ? 'Génération…' : 'Télécharger le contrat (.docx)'}
+              {downloadingWord ? 'Génération…' : 'Télécharger le contrat (.docx)'}
             </button>
           </div>
         )}
@@ -111,9 +143,24 @@ export default function ContractPage() {
         <>
           <p className="print:hidden text-sm text-gray-500 mb-3">
             Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte ci-dessous avant de télécharger.
+            Utilise « Aperçu PDF » pour voir la pagination réelle et exacte du document.
           </p>
           <RichEditor initialContent={initialContent} onReady={handleReady} />
         </>
+      )}
+
+      {pdfPreviewUrl && (
+        <div className="print:hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-3 border-b">
+              <p className="text-sm font-medium">Aperçu PDF — pagination exacte</p>
+              <button onClick={closePdfPreview} className="text-sm text-gray-600 hover:underline px-2">
+                Fermer
+              </button>
+            </div>
+            <iframe src={pdfPreviewUrl} className="flex-1 w-full rounded-b-lg" title="Aperçu PDF" />
+          </div>
+        </div>
       )}
     </div>
   );
