@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import type { Editor } from '@tiptap/react';
@@ -18,10 +18,12 @@ export default function ContractPage() {
   const [loading, setLoading] = useState(true);
   const [downloadingWord, setDownloadingWord] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
-  const [previewingPdf, setPreviewingPdf] = useState(false);
+  const [refreshingPreview, setRefreshingPreview] = useState(false);
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const previewUrlRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!employeeId) {
@@ -77,10 +79,11 @@ export default function ContractPage() {
     }
   }
 
-  async function openPdfPreview() {
-    setPreviewingPdf(true);
+  const refreshPreview = useCallback(async () => {
+    if (!editor) return;
+    setRefreshingPreview(true);
     setError('');
-    const html = editor?.getHTML() ?? '';
+    const html = editor.getHTML();
     try {
       const res = await fetch('/api/export-pdf', {
         method: 'POST',
@@ -89,33 +92,38 @@ export default function ContractPage() {
       });
       if (!res.ok) throw new Error((await res.json()).error);
       const blob = await res.blob();
-      setPdfPreviewUrl(URL.createObjectURL(blob));
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+      const url = URL.createObjectURL(blob);
+      previewUrlRef.current = url;
+      setPdfPreviewUrl(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur inconnue.');
     } finally {
-      setPreviewingPdf(false);
+      setRefreshingPreview(false);
     }
-  }
+  }, [editor, fileName]);
 
-  function closePdfPreview() {
-    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl);
-    setPdfPreviewUrl(null);
-  }
+  // Génère automatiquement l'aperçu dès que le contrat est prêt.
+  useEffect(() => {
+    if (editor && showPreview && !pdfPreviewUrl) {
+      refreshPreview();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, showPreview]);
 
   if (loading) return <div className="p-10 text-center text-gray-400">Génération en cours…</div>;
 
   return (
-    <div className="mx-auto max-w-3xl w-full p-6 sm:p-10">
-      <div className="print:hidden flex items-center justify-between mb-6">
+    <div className={`mx-auto w-full p-6 sm:p-10 ${showPreview ? 'max-w-7xl' : 'max-w-3xl'}`}>
+      <div className="print:hidden flex items-center justify-between mb-6 flex-wrap gap-2">
         <Link href="/" className="text-sm text-blue-600 hover:underline">← Retour</Link>
         {!error && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
-              onClick={openPdfPreview}
-              disabled={previewingPdf}
-              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50 disabled:opacity-50"
+              onClick={() => setShowPreview(v => !v)}
+              className="bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-md px-4 py-2 hover:bg-gray-50"
             >
-              {previewingPdf ? 'Génération…' : 'Aperçu PDF (pagination exacte)'}
+              {showPreview ? 'Masquer l’aperçu PDF' : 'Afficher l’aperçu PDF'}
             </button>
             <button
               onClick={() => downloadFile('/api/export-pdf', 'pdf', setDownloadingPdf)}
@@ -142,25 +150,36 @@ export default function ContractPage() {
       {!error && (
         <>
           <p className="print:hidden text-sm text-gray-500 mb-3">
-            Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte ci-dessous avant de télécharger.
-            Utilise « Aperçu PDF » pour voir la pagination réelle et exacte du document.
+            Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte à gauche —
+            l&apos;aperçu à droite montre le vrai PDF, clique sur « Actualiser l&apos;aperçu » après tes modifications.
           </p>
-          <RichEditor initialContent={initialContent} onReady={handleReady} />
-        </>
-      )}
-
-      {pdfPreviewUrl && (
-        <div className="print:hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-3 border-b">
-              <p className="text-sm font-medium">Aperçu PDF — pagination exacte</p>
-              <button onClick={closePdfPreview} className="text-sm text-gray-600 hover:underline px-2">
-                Fermer
-              </button>
+          <div className={showPreview ? 'flex flex-col lg:flex-row gap-6 items-start' : ''}>
+            <div className={showPreview ? 'w-full lg:flex-1 min-w-0' : ''}>
+              <RichEditor initialContent={initialContent} onReady={handleReady} />
             </div>
-            <iframe src={pdfPreviewUrl} className="flex-1 w-full rounded-b-lg" title="Aperçu PDF" />
+            {showPreview && (
+              <div className="print:hidden w-full lg:w-[45%] shrink-0 lg:sticky lg:top-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium">Aperçu PDF (pagination exacte)</p>
+                  <button
+                    onClick={refreshPreview}
+                    disabled={refreshingPreview}
+                    className="text-sm bg-blue-600 text-white rounded-md px-3 py-1.5 hover:bg-blue-700 disabled:bg-gray-400"
+                  >
+                    {refreshingPreview ? 'Actualisation…' : 'Actualiser l’aperçu'}
+                  </button>
+                </div>
+                {pdfPreviewUrl ? (
+                  <iframe src={pdfPreviewUrl} className="w-full h-[80vh] border rounded-lg" title="Aperçu PDF" />
+                ) : (
+                  <div className="w-full h-[80vh] border rounded-lg flex items-center justify-center text-sm text-gray-400">
+                    Génération de l&apos;aperçu…
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
     </div>
   );
