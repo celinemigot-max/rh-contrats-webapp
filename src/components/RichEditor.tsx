@@ -93,10 +93,12 @@ export default function RichEditor({
         <div
           className="print:hidden pointer-events-none absolute inset-0"
           style={{
-            // Recalibré à partir d'un PDF réel : la coupure de page tombait bien avant
-            // ce que le calcul théorique (marges Chrome/Edge par défaut) prévoyait.
+            // Calibré en mesurant précisément, dans une fenêtre large, la position du
+            // texte à l'endroit exact où un PDF réel change de page. Remarque : la
+            // largeur de la fenêtre du navigateur influence le retour à la ligne, donc
+            // ce repère est le plus fiable avec une fenêtre large (idéalement maximisée).
             backgroundImage:
-              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(975px - 1px), #f87171 975px, transparent calc(975px + 1px))',
+              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(945px - 1px), #f87171 945px, transparent calc(945px + 1px))',
           }}
         />
         <EditorContent editor={editor} className="relative p-4 min-h-[400px] focus:outline-none print:p-0" />
