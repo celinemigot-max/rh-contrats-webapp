@@ -93,10 +93,10 @@ export default function RichEditor({
         <div
           className="print:hidden pointer-events-none absolute inset-0"
           style={{
-            // Hauteur de page A4 (1122px à 96dpi) moins les marges d'impression par défaut
-            // de Chrome/Edge (~1cm haut/bas), pour correspondre au PDF téléchargé.
+            // Recalibré à partir d'un PDF réel : la coupure de page tombait bien avant
+            // ce que le calcul théorique (marges Chrome/Edge par défaut) prévoyait.
             backgroundImage:
-              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(1047px - 1px), #f87171 1047px, transparent calc(1047px + 1px))',
+              'repeating-linear-gradient(to bottom, transparent 0, transparent calc(975px - 1px), #f87171 975px, transparent calc(975px + 1px))',
           }}
         />
         <EditorContent editor={editor} className="relative p-4 min-h-[400px] focus:outline-none print:p-0" />
