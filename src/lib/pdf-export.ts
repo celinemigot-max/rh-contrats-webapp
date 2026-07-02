@@ -4,13 +4,19 @@ import type { Browser } from 'puppeteer-core';
 // pas d'en-tête/pied de page) qu'on contrôle nous-mêmes — contrairement à l'impression
 // depuis le navigateur de l'utilisateur, dont les réglages varient et sont imprévisibles.
 
+// Le paquet complet @sparticuz/chromium dépasse la limite de taille de déploiement de
+// Vercel. On utilise donc la version "-min", qui télécharge le binaire Chromium à la
+// demande depuis les releases GitHub du projet plutôt que de l'inclure dans le build.
+const CHROMIUM_PACK_URL =
+  'https://github.com/Sparticuz/chromium/releases/download/v149.0.0/chromium-v149.0.0-pack.x64.tar';
+
 async function launchBrowser(): Promise<Browser> {
   if (process.env.VERCEL) {
-    const chromium = (await import('@sparticuz/chromium')).default;
+    const chromium = (await import('@sparticuz/chromium-min')).default;
     const puppeteer = await import('puppeteer-core');
     return puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_PACK_URL),
       headless: true,
     });
   }
