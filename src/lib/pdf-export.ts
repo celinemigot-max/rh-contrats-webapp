@@ -1,5 +1,22 @@
 import type { Browser } from 'puppeteer-core';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { stripPageMarkers } from './strip-page-markers';
+
+// Polices intégrées directement en base64 (mêmes fichiers que ceux utilisés par l'éditeur
+// via next/font/google) : on a constaté que le lien Google Fonts chargé par le navigateur
+// au moment de générer le PDF échouait silencieusement (mécanisme de chargement de police
+// non fiable dans ce contexte), et que le texte basculait alors sur une police de repli
+// plus large pour les caractères accentués, décalant tous les retours à la ligne par
+// rapport à l'éditeur. Charger la police depuis le disque élimine toute dépendance réseau.
+function loadFontBase64(fileName: string): string {
+  return readFileSync(join(process.cwd(), 'src/fonts', fileName)).toString('base64');
+}
+
+const CARLITO_REGULAR = loadFontBase64('Carlito-Regular.woff2');
+const CARLITO_BOLD = loadFontBase64('Carlito-Bold.woff2');
+const CARLITO_ITALIC = loadFontBase64('Carlito-Italic.woff2');
+const CARLITO_BOLD_ITALIC = loadFontBase64('Carlito-BoldItalic.woff2');
 
 // Génère le PDF entièrement côté serveur, avec des réglages fixes (marges, format,
 // pas d'en-tête/pied de page) qu'on contrôle nous-mêmes — contrairement à l'impression
@@ -38,11 +55,36 @@ export async function htmlToPdfBuffer(bodyHtml: string): Promise<Buffer> {
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
+  @font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 400;
+    src: url(data:font/woff2;base64,${CARLITO_REGULAR}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Carlito';
+    font-style: normal;
+    font-weight: 700;
+    src: url(data:font/woff2;base64,${CARLITO_BOLD}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 400;
+    src: url(data:font/woff2;base64,${CARLITO_ITALIC}) format('woff2');
+  }
+  @font-face {
+    font-family: 'Carlito';
+    font-style: italic;
+    font-weight: 700;
+    src: url(data:font/woff2;base64,${CARLITO_BOLD_ITALIC}) format('woff2');
+  }
   * { box-sizing: border-box; }
+  @page {
+    size: A4;
+    margin: 2.5cm;
+  }
   body {
     font-family: 'Carlito', Arial, sans-serif;
     font-size: 11pt;
@@ -68,11 +110,28 @@ export async function htmlToPdfBuffer(bodyHtml: string): Promise<Buffer> {
   try {
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: 'load' });
-    await page.evaluateHandle('document.fonts.ready');
+    // document.fonts.ready ne suffit pas seul : il n'attend que les polices déjà en
+    // cours de chargement. Si rien n'a encore déclenché le chargement de Carlito à ce
+    // stade, l'attente se termine immédiatement sans l'avoir téléchargée, et le texte
+    // est imprimé avec la police de repli (Arial) — plus large, ce qui décale tous les
+    // retours à la ligne par rapport à l'éditeur. On force explicitement le chargement
+    // de chaque variante utilisée avant d'imprimer.
+    await page.evaluate(async () => {
+      await Promise.all([
+        document.fonts.load('11pt Carlito'),
+        document.fonts.load('bold 11pt Carlito'),
+        document.fonts.load('italic 11pt Carlito'),
+        document.fonts.load('italic bold 11pt Carlito'),
+      ]);
+      await document.fonts.ready;
+    });
 
     const pdfUint8 = await page.pdf({
-      format: 'A4',
-      margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' },
+      // La taille et les marges viennent de la règle CSS @page ci-dessus : sans
+      // preferCSSPageSize, Puppeteer met en page le contenu à la largeur de la fenêtre
+      // (800px par défaut) puis le redécoupe en pages A4, ce qui ne correspond PAS à la
+      // largeur réellement disponible pour le texte et fausse tous les retours à la ligne.
+      preferCSSPageSize: true,
       printBackground: true,
       displayHeaderFooter: false,
     });

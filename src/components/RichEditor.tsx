@@ -57,7 +57,7 @@ export default function RichEditor({
   }, [editor, onReady]);
 
   return (
-    <div className={`rich-editor ${carlito.className} w-[718px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto`}>
+    <div className={`rich-editor ${carlito.className} w-[605px] mx-auto border rounded-lg bg-white print:w-auto print:border-0 print:rounded-none print:mx-0 overflow-x-auto`}>
       {editor && (
         <div className="print:hidden sticky top-0 z-10 flex gap-1 border-b p-2 flex-wrap bg-white rounded-t-lg">
           <ToolbarButton active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}>
