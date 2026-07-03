@@ -109,7 +109,9 @@ export default function ContractPage() {
         <>
           <p className="print:hidden text-sm text-gray-500 mb-3">
             Les informations du collaborateur ont été pré-remplies. Relis et modifie librement le texte ci-dessous avant de télécharger.
-            Les lignes rouges indiquent approximativement les fins de page.
+            Les lignes rouges pointillées indiquent approximativement les fins de page. Pour placer un repère exact (après vérification
+            sur un PDF téléchargé), écris « Repère » sur sa propre ligne (ou colle-le depuis un autre document) : il se transforme en
+            ligne rouge et disparaît du fichier final.
           </p>
           <RichEditor initialContent={initialContent} onReady={handleReady} />
         </>

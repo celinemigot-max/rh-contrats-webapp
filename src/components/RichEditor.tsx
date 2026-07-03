@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { Variable } from '@/lib/tiptap/variable-extension';
 import { Indent } from '@/lib/tiptap/indent-extension';
 import { PreservePasteFormatting } from '@/lib/tiptap/preserve-paste-extension';
+import { PageMarker } from '@/lib/tiptap/page-marker-extension';
 
 export type VariableDef = { tag: string; label: string };
 
@@ -37,6 +38,7 @@ export default function RichEditor({
       StarterKit,
       Variable,
       Indent,
+      PageMarker,
       PreservePasteFormatting,
       TextAlign.configure({ types: ['paragraph', 'heading'] }),
       Table.configure({ resizable: true }),
@@ -92,6 +94,10 @@ export default function RichEditor({
           <span className="w-px bg-gray-200 mx-1" />
           <ToolbarButton onClick={() => editor.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run()}>
             Tableau
+          </ToolbarButton>
+          <span className="w-px bg-gray-200 mx-1" />
+          <ToolbarButton onClick={() => editor.chain().focus().insertPageMarker().run()}>
+            Repère
           </ToolbarButton>
         </div>
       )}

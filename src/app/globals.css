@@ -30,6 +30,26 @@ body {
   white-space: nowrap;
 }
 
+.page-marker {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed #ef4444;
+  margin: 14px 0;
+  cursor: pointer;
+}
+
+.page-marker::after {
+  content: 'Repère';
+  position: absolute;
+  top: -9px;
+  left: 8px;
+  background: white;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #ef4444;
+}
+
 .rich-editor .ProseMirror {
   outline: none;
   font-size: 11pt;

@@ -1,4 +1,5 @@
 import type { Browser } from 'puppeteer-core';
+import { stripPageMarkers } from './strip-page-markers';
 
 // Génère le PDF entièrement côté serveur, avec des réglages fixes (marges, format,
 // pas d'en-tête/pied de page) qu'on contrôle nous-mêmes — contrairement à l'impression
@@ -58,7 +59,7 @@ export async function htmlToPdfBuffer(bodyHtml: string): Promise<Buffer> {
   strong { font-weight: 700; }
 </style>
 </head>
-<body>${bodyHtml}</body>
+<body>${stripPageMarkers(bodyHtml)}</body>
 </html>`;
 
   const browser = await launchBrowser();
