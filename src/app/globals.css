@@ -54,6 +54,12 @@ body {
   outline: none;
   font-size: 11pt;
   line-height: 1.15;
+  /* Empêche le navigateur de couper un mot au milieu (ex : une ligne de
+     soulignés "_____" utilisée comme séparateur) quand il ne tient pas sur
+     une ligne. Le PDF ne le fait jamais non plus : sans ça, l'éditeur
+     affichait un retour à la ligne que le document final n'a pas. */
+  overflow-wrap: normal;
+  word-break: keep-all;
 }
 
 /* Reproduit les espacements par défaut de Word (styles.xml) pour que l'aperçu
