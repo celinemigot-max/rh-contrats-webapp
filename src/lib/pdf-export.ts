@@ -48,6 +48,7 @@ export async function htmlToPdfBuffer(bodyHtml: string): Promise<Buffer> {
     font-size: 11pt;
     line-height: 1.15;
     margin: 0;
+    padding: 0 16px;
     color: #171717;
   }
   p { margin: 0 0 6pt 0; }
